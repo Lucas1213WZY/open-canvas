@@ -1,39 +1,27 @@
-import { StreamWorkerMessage, StreamConfig } from "./streamWorker.types";
+import { createClient } from "@/hooks/utils";
+import { StreamConfig } from "./streamWorker.types";
 
 export class StreamWorkerService {
-  private worker: Worker;
-
-  constructor() {
-    this.worker = new Worker(new URL("./stream.worker.ts", import.meta.url));
-  }
+  constructor() {}
 
   async *streamData(config: StreamConfig): AsyncGenerator<any, void, unknown> {
-    this.worker.postMessage(config);
+    const { threadId, assistantId, input, modelName, modelConfigs } = config;
+    const client = createClient();
+    const stream = client.runs.stream(threadId, assistantId, {
+      input: input as Record<string, unknown>,
+      streamMode: "events",
+      config: {
+        configurable: {
+          customModelName: modelName,
+          modelConfig: modelConfigs[modelName as keyof typeof modelConfigs],
+        },
+      },
+    });
 
-    while (true) {
-      const event: MessageEvent<StreamWorkerMessage> = await new Promise(
-        (resolve) => {
-          this.worker.onmessage = resolve;
-        }
-      );
-
-      const { type, data, error } = event.data;
-
-      if (type === "error") {
-        throw new Error(error);
-      }
-
-      if (type === "chunk" && data) {
-        yield JSON.parse(data);
-      }
-
-      if (type === "done") {
-        break;
-      }
+    for await (const chunk of stream) {
+      yield chunk;
     }
   }
 
-  terminate() {
-    this.worker.terminate();
-  }
+  terminate() {}
 }

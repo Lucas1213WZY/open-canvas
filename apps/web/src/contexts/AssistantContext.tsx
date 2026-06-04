@@ -253,7 +253,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   const legacyGetAndUpdateAssistant = async (
     userId: string,
     assistantIdCookie: string
-  ) => {
+  ): Promise<boolean> => {
     const updatedAssistant = await editCustomAssistant({
       editedAssistant: {
         is_default: true,
@@ -294,13 +294,15 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
           </p>
         ),
       });
-      return;
+      removeCookie(ASSISTANT_ID_COOKIE);
+      return false;
     }
 
     setSelectedAssistant(updatedAssistant);
     setAssistants([updatedAssistant]);
     // Remove the cookie to ensure this is not called again.
     removeCookie(ASSISTANT_ID_COOKIE);
+    return true;
   };
 
   const getOrCreateAssistant = async (userId: string) => {
@@ -313,10 +315,15 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
 
     const assistantIdCookie = getCookie(ASSISTANT_ID_COOKIE);
     if (assistantIdCookie) {
-      await legacyGetAndUpdateAssistant(userId, assistantIdCookie);
-      // Return early because this function will set the selected assistant and assistants state.
-      setIsLoadingAllAssistants(false);
-      return;
+      const updatedLegacyAssistant = await legacyGetAndUpdateAssistant(
+        userId,
+        assistantIdCookie
+      );
+      if (updatedLegacyAssistant) {
+        // Return early because this function will set the selected assistant and assistants state.
+        setIsLoadingAllAssistants(false);
+        return;
+      }
     }
 
     // No cookie found. First, search for all assistants under the user's ID
