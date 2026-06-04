@@ -24,10 +24,10 @@ export function ArtifactTitle(props: ArtifactTitleProps) {
   };
 
   return (
-    <div className="pl-[6px] pt-3 flex flex-col items-start justify-start ml-[6px] gap-1 max-w-1/2">
+    <div className="pl-[6px] pt-3 flex flex-col items-start justify-start ml-[6px] gap-1 flex-1 min-w-0">
       <input
         aria-label="Artifact title"
-        className="text-xl font-medium text-gray-600 bg-transparent border-none p-0 outline-none focus:ring-0 max-w-[420px] truncate"
+        className="w-full min-w-0 text-xl font-medium text-gray-600 bg-transparent border-none p-0 outline-none focus:ring-0"
         value={draftTitle}
         onChange={(event) => setDraftTitle(event.target.value)}
         onBlur={commitTitle}

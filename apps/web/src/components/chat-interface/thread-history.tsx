@@ -14,6 +14,8 @@ import React from "react";
 import { useUserContext } from "@/contexts/UserContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
 
+const OPENAI_DIRECT_CHAT = true;
+
 interface ThreadHistoryProps {
   switchSelectedThreadCallback: (thread: Thread) => void;
 }
@@ -205,13 +207,13 @@ export function ThreadHistoryComponent(props: ThreadHistoryProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window == "undefined" || userThreads.length || !user) return;
+    if (typeof window == "undefined" || userThreads.length) return;
 
     getUserThreads();
-  }, [user]);
+  }, [userThreads.length]);
 
   const handleDeleteThread = async (id: string) => {
-    if (!user) {
+    if (!OPENAI_DIRECT_CHAT && !user) {
       toast({
         title: "Failed to delete thread",
         description: "User not found",

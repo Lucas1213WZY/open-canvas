@@ -7,12 +7,21 @@ import {
 import { CustomModelConfig } from "@opencanvas/shared/types";
 import { Thread } from "@langchain/langgraph-sdk";
 import { createClient } from "../hooks/utils";
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useUserContext } from "./UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 const OPENAI_DIRECT_CHAT = true;
+const LOCAL_THREAD_HISTORY_KEY = "xaikit-local-thread-history";
 
 type ThreadContentType = {
   threadId: string | null;
@@ -26,6 +35,7 @@ type ThreadContentType = {
   createThread: () => Promise<Thread | undefined>;
   getUserThreads: () => Promise<void>;
   deleteThread: (id: string, clearMessages: () => void) => Promise<void>;
+  saveLocalThread: (thread: Thread) => void;
   setThreadId: (id: string | null) => void;
   setModelName: (name: ALL_MODEL_NAMES) => void;
   setModelConfig: (
@@ -41,6 +51,10 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [threadId, setThreadId] = useQueryState("threadId");
   const [userThreads, setUserThreads] = useState<Thread[]>([]);
+  const [localThreadHistory, setLocalThreadHistory] = useLocalStorage<Thread[]>(
+    LOCAL_THREAD_HISTORY_KEY,
+    []
+  );
   const [isUserThreadsLoading, setIsUserThreadsLoading] = useState(false);
   const [modelName, setModelName] =
     useState<ALL_MODEL_NAMES>(DEFAULT_MODEL_NAME);
@@ -89,6 +103,12 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
       modelConfigs[modelName] || modelConfigs[modelName.replace("azure/", "")]
     );
   }, [modelName, modelConfigs]);
+
+  useEffect(() => {
+    if (OPENAI_DIRECT_CHAT) {
+      setUserThreads(localThreadHistory);
+    }
+  }, [localThreadHistory]);
 
   const setModelConfig = (
     modelName: ALL_MODEL_NAMES,
@@ -192,7 +212,7 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
   const getUserThreads = async () => {
     if (OPENAI_DIRECT_CHAT) {
-      setUserThreads([]);
+      setUserThreads(localThreadHistory);
       return;
     }
 
@@ -232,7 +252,10 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
   const deleteThread = async (id: string, clearMessages: () => void) => {
     if (OPENAI_DIRECT_CHAT) {
-      setUserThreads([]);
+      setLocalThreadHistory((prev) => prev.filter((thread) => thread.thread_id !== id));
+      setUserThreads((prevThreads) =>
+        prevThreads.filter((thread) => thread.thread_id !== id)
+      );
       setThreadId(null);
       clearMessages();
       return;
@@ -259,9 +282,24 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const saveLocalThread = (thread: Thread) => {
+    if (!OPENAI_DIRECT_CHAT) {
+      return;
+    }
+
+    setLocalThreadHistory((prev) => {
+      const nextThreads = [
+        thread,
+        ...prev.filter((existing) => existing.thread_id !== thread.thread_id),
+      ];
+      setUserThreads(nextThreads);
+      return nextThreads;
+    });
+  };
+
   const getThread = async (id: string): Promise<Thread | undefined> => {
     if (OPENAI_DIRECT_CHAT) {
-      return undefined;
+      return localThreadHistory.find((thread) => thread.thread_id === id);
     }
 
     try {
@@ -292,6 +330,7 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     createThread,
     getUserThreads,
     deleteThread,
+    saveLocalThread,
     setThreadId,
     setModelName,
     setModelConfig,

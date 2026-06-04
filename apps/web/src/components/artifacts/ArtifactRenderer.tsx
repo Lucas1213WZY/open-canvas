@@ -21,6 +21,7 @@ import { ArtifactHeader } from "./header";
 import { useUserContext } from "@/contexts/UserContext";
 import { useAssistantContext } from "@/contexts/AssistantContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
+import { Thread } from "@langchain/langgraph-sdk";
 
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 const OPENAI_DIRECT_CHAT = true;
@@ -369,6 +370,7 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
         artifactUpdateFailed={artifactUpdateFailed}
         chatCollapsed={props.chatCollapsed}
         setChatCollapsed={props.setChatCollapsed}
+        goHome={goHome}
         resetToEmptyCanvas={resetToEmptyCanvas}
         isStreaming={isStreaming}
         onTitleChange={updateArtifactTitle}

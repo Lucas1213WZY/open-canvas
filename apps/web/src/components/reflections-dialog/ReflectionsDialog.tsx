@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { Badge } from "../ui/badge";
 import { getIcon } from "../assistant-select/utils";
+import { useGraphContext } from "@/contexts/GraphContext";
+import { convertToOpenAIFormat } from "@/lib/convert_messages";
+import { BaseMessage } from "@langchain/core/messages";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { Reflections as ReflectionsType } from "@opencanvas/shared/types";
+
+const OPENAI_DIRECT_CHAT = true;
+const LOCAL_REFLECTIONS_KEY = "xaikit-local-reflections";
 
 export interface NoReflectionsProps {
   selectedAssistant: Assistant | undefined;
@@ -63,13 +71,38 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
   const [open, setOpen] = useState(false);
   const { selectedAssistant } = props;
   const {
+    graphData: { messages, artifact },
+  } = useGraphContext();
+  const [localReflections, setLocalReflections] = useLocalStorage<
+    (ReflectionsType & { updatedAt: string }) | undefined
+  >(LOCAL_REFLECTIONS_KEY, undefined);
+  const {
     isLoadingReflections,
     reflections,
     getReflections,
     deleteReflections,
   } = useStore();
 
+  const artifactContent = useMemo(() => {
+    if (!artifact) return "";
+
+    const current = artifact.contents.find((content) => content.index === artifact.currentIndex);
+    if (!current) return "";
+
+    return current.type === "text" ? current.fullMarkdown : current.code;
+  }, [artifact]);
+
+  const mappedMessages = useMemo(
+    () => messages.map((message) => convertToOpenAIFormat(message as BaseMessage)),
+    [messages]
+  );
+
+  const [isGeneratingLocalReflections, setIsGeneratingLocalReflections] = useState(false);
+
+  const storedReflections = OPENAI_DIRECT_CHAT ? localReflections : reflections;
+
   useEffect(() => {
+    if (OPENAI_DIRECT_CHAT) return;
     if (!selectedAssistant || typeof window === "undefined") return;
     // Don't re-fetch reflections if they already exist & are for the same assistant
     if (
@@ -82,6 +115,12 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
   }, [selectedAssistant]);
 
   const handleDelete = async () => {
+    if (OPENAI_DIRECT_CHAT) {
+      setLocalReflections(undefined);
+      setOpen(false);
+      return true;
+    }
+
     if (!selectedAssistant) {
       toast({
         title: "Error",
@@ -93,6 +132,60 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
     }
     setOpen(false);
     return await deleteReflections(selectedAssistant.assistant_id);
+  };
+
+  const handleGenerateLocalReflections = async () => {
+    if (!mappedMessages.length) {
+      toast({
+        title: "No chat history yet",
+        description: "Start a chat before generating reflections.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+
+    setIsGeneratingLocalReflections(true);
+    try {
+      const response = await fetch("/api/openai-reflections", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: mappedMessages,
+          artifactContent,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => undefined);
+        throw new Error(error?.error || "Failed to generate reflections");
+      }
+
+      const result = (await response.json()) as {
+        styleRules: string[];
+        content: string[];
+      };
+
+      const nextReflections = {
+        styleRules: result.styleRules ?? [],
+        content: result.content ?? [],
+        updatedAt: new Date().toISOString(),
+      };
+
+      setLocalReflections(nextReflections);
+    } catch (error) {
+      toast({
+        title: "Failed to generate reflections",
+        description:
+          error instanceof Error ? error.message : "Please try again later.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsGeneratingLocalReflections(false);
+    }
   };
 
   const iconData = (selectedAssistant?.metadata as Record<string, any>)
@@ -116,7 +209,7 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
             <TighterText className="text-3xl font-light text-gray-800">
               Reflections
             </TighterText>
-            {selectedAssistant && (
+            {selectedAssistant && !OPENAI_DIRECT_CHAT && (
               <Badge
                 style={{
                   ...(iconData
@@ -143,9 +236,17 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
           </DialogTitle>
           <DialogDescription className="mt-2 text-md font-light text-gray-600">
             <TighterText>
-              {isLoadingReflections ? (
+              {OPENAI_DIRECT_CHAT ? (
+                isGeneratingLocalReflections ? (
+                  "Generating reflections..."
+                ) : storedReflections?.content || storedReflections?.styleRules ? (
+                  "Current reflections generated from your browser chat session."
+                ) : (
+                  "Generate reflections from your current OpenAI chat session."
+                )
+              ) : isLoadingReflections ? (
                 "Loading reflections..."
-              ) : reflections?.content || reflections?.styleRules ? (
+              ) : storedReflections?.content || storedReflections?.styleRules ? (
                 "Current reflections generated by the assistant for content generation."
               ) : (
                 <NoReflections
@@ -157,19 +258,62 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="mt-6 max-h-[60vh] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-          {isLoadingReflections ? (
+          {OPENAI_DIRECT_CHAT ? (
+            isGeneratingLocalReflections ? (
+              <div className="flex justify-center items-center h-32">
+                <Loader className="h-8 w-8 animate-spin" />
+              </div>
+            ) : storedReflections?.content || storedReflections?.styleRules ? (
+              <>
+                {storedReflections?.styleRules && (
+                  <div className="mb-6">
+                    <TighterText className="text-xl font-light text-gray-800 sticky top-0 bg-white py-2 mb-3">
+                      Style Reflections:
+                    </TighterText>
+                    <ul className="list-disc list-inside space-y-2">
+                      {storedReflections.styleRules?.map((rule, index) => (
+                        <li key={index} className="flex items-baseline">
+                          <span className="mr-2">•</span>
+                          <TighterText className="text-gray-600 font-light">
+                            {rule}
+                          </TighterText>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {storedReflections?.content && (
+                  <div className="mb-6">
+                    <TighterText className="text-xl font-light text-gray-800 sticky top-0 bg-white py-2 mb-3">
+                      Content Reflections:
+                    </TighterText>
+                    <ul className="list-disc list-inside space-y-2">
+                      {storedReflections.content.map((rule, index) => (
+                        <li key={index} className="flex items-baseline">
+                          <span className="mr-2">•</span>
+                          <TighterText className="text-gray-600 font-light">
+                            {rule}
+                          </TighterText>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : null
+          ) : isLoadingReflections ? (
             <div className="flex justify-center items-center h-32">
               <Loader className="h-8 w-8 animate-spin" />
             </div>
-          ) : reflections?.content || reflections?.styleRules ? (
+          ) : storedReflections?.content || storedReflections?.styleRules ? (
             <>
-              {reflections?.styleRules && (
+              {storedReflections?.styleRules && (
                 <div className="mb-6">
                   <TighterText className="text-xl font-light text-gray-800 sticky top-0 bg-white py-2 mb-3">
                     Style Reflections:
                   </TighterText>
                   <ul className="list-disc list-inside space-y-2">
-                    {reflections.styleRules?.map((rule, index) => (
+                    {storedReflections.styleRules?.map((rule, index) => (
                       <li key={index} className="flex items-baseline">
                         <span className="mr-2">•</span>
                         <TighterText className="text-gray-600 font-light">
@@ -180,13 +324,13 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
                   </ul>
                 </div>
               )}
-              {reflections?.content && (
+              {storedReflections?.content && (
                 <div className="mb-6">
                   <TighterText className="text-xl font-light text-gray-800 sticky top-0 bg-white py-2 mb-3">
                     Content Reflections:
                   </TighterText>
                   <ul className="list-disc list-inside space-y-2">
-                    {reflections.content.map((rule, index) => (
+                    {storedReflections.content.map((rule, index) => (
                       <li key={index} className="flex items-baseline">
                         <span className="mr-2">•</span>
                         <TighterText className="text-gray-600 font-light">
@@ -201,8 +345,20 @@ export function ReflectionsDialog(props: ReflectionsDialogProps) {
           ) : null}
         </div>
         <div className="mt-6 flex justify-between">
-          {reflections?.content || reflections?.styleRules ? (
+          {storedReflections?.content || storedReflections?.styleRules ? (
             <ConfirmClearDialog handleDeleteReflections={handleDelete} />
+          ) : OPENAI_DIRECT_CHAT ? (
+            <Button
+              onClick={handleGenerateLocalReflections}
+              variant="secondary"
+              disabled={isGeneratingLocalReflections}
+            >
+              <TighterText>
+                {isGeneratingLocalReflections
+                  ? "Generating..."
+                  : "Generate reflections"}
+              </TighterText>
+            </Button>
           ) : null}
           <Button
             onClick={() => setOpen(false)}

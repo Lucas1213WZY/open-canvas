@@ -7,9 +7,6 @@ import { NotebookPen } from "lucide-react";
 import { ProgrammingLanguagesDropdown } from "../ui/programming-lang-dropdown";
 import { Button } from "../ui/button";
 
-const STARTER_DRAFT_MESSAGE =
-  "I would like to compare ... and ... explanations, for example (decision tree) and (SHAP).";
-
 const QUICK_START_PROMPTS_SEARCH = [
   "Plan a user study comparing example-based and counterfactual AI explanations",
   "Design an experiment on whether feature-importance explanations improve trust calibration",
@@ -107,7 +104,7 @@ const QuickStartButtons = (props: QuickStartButtonsProps) => {
         <div className="flex flex-row gap-1 items-center justify-center w-full">
           <Button
             variant="outline"
-            className="text-gray-500 hover:text-gray-700 transition-colors ease-in rounded-2xl flex items-center justify-center gap-2 w-[250px] h-[64px]"
+            className="text-gray-500 hover:text-gray-700 transition-colors ease-in rounded-2xl flex items-center justify-center gap-2 w-[200px] h-[52px]"
             onClick={() => props.handleQuickStart("text")}
           >
             Start planning
@@ -139,30 +136,26 @@ export const ThreadWelcome: FC<ThreadWelcomeProps> = (
 ) => {
   return (
     <ThreadPrimitive.Empty>
-      <div className="flex items-center justify-center mt-16 w-full">
-        <div className="text-center max-w-3xl w-full">
-          <Avatar className="mx-auto h-24 w-24 rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
-            <AvatarImage
-              src="/xai.png"
-              alt="XAIkit icon"
-              className="object-contain p-1"
-            />
-            <AvatarFallback className="rounded-3xl">XAI</AvatarFallback>
+      <div className="flex items-center justify-center mt-8 w-full">
+        <div className="text-center max-w-2xl w-full">
+          <Avatar className="mx-auto h-16 w-16 rounded-md border border-slate-200 bg-white p-2 shadow-sm">
+            <AvatarImage src="/xai.png" alt="XAIkit icon" className="object-contain" />
+            <AvatarFallback className="rounded-md">XAI</AvatarFallback>
           </Avatar>
-          <div className="mx-auto mt-6 flex max-w-xl items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left shadow-sm">
-            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+          <div className="mx-auto mt-2 flex max-w-lg items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left shadow-sm">
+            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
               AI
             </div>
-            <p className="text-sm leading-6 text-slate-700">
-              {STARTER_DRAFT_MESSAGE}
-            </p>
-          </div>
-          <TighterText className="mt-4 text-lg font-medium">
-            What XAI user study or experiment would you like to plan?
-          </TighterText>
-          <div className="mt-4 mx-auto max-w-xl rounded-2xl border bg-white px-5 py-4 text-left text-sm leading-6 text-gray-600 shadow-sm">
-            Tell me what user study or experiment you would like to conduct
-            with AI explanations.
+            <div className="space-y-1 text-sm leading-5 text-slate-700">
+              <TighterText className="text-base font-medium text-slate-900">
+                What XAI user study or experiment would you like to plan?
+              </TighterText>
+              <p>
+                Tell me what user study or experiment you would like to
+                conduct with AI explanations. e.g., I would like to compare
+                (decision tree) and (SHAP) explanations.
+              </p>
+            </div>
           </div>
           <div className="mt-8 w-full">
             <QuickStartButtons
