@@ -1,11 +1,11 @@
 import { ProgrammingLanguageOptions } from "@opencanvas/shared/types";
 import { ThreadPrimitive, useThreadRuntime } from "@assistant-ui/react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FC, useMemo } from "react";
 import { TighterText } from "../ui/header";
 import { NotebookPen } from "lucide-react";
 import { ProgrammingLanguagesDropdown } from "../ui/programming-lang-dropdown";
 import { Button } from "../ui/button";
+import Image from "next/image";
 
 const QUICK_START_PROMPTS_SEARCH = [
   "Plan a user study comparing example-based and counterfactual AI explanations",
@@ -138,10 +138,15 @@ export const ThreadWelcome: FC<ThreadWelcomeProps> = (
     <ThreadPrimitive.Empty>
       <div className="flex items-center justify-center mt-8 w-full">
         <div className="text-center max-w-2xl w-full">
-          <Avatar className="mx-auto h-16 w-16 rounded-md border border-slate-200 bg-white p-2 shadow-sm">
-            <AvatarImage src="/xai.png" alt="XAIkit icon" className="object-contain" />
-            <AvatarFallback className="rounded-md">XAI</AvatarFallback>
-          </Avatar>
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-md border border-slate-200 bg-white p-2 shadow-sm">
+            <Image
+              src="/xai.png"
+              alt="XAIkit icon"
+              width={64}
+              height={64}
+              className="h-full w-full object-contain"
+            />
+          </div>
           <div className="mx-auto mt-2 flex max-w-lg items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left shadow-sm">
             <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
               AI

@@ -21,7 +21,6 @@ import { ArtifactHeader } from "./header";
 import { useUserContext } from "@/contexts/UserContext";
 import { useAssistantContext } from "@/contexts/AssistantContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
-import { Thread } from "@langchain/langgraph-sdk";
 
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 const OPENAI_DIRECT_CHAT = true;
@@ -336,6 +335,19 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
     });
     setTextRendererKey((key) => key + 1);
     props.setIsEditing(true);
+    handleCleanupState();
+  };
+
+  const goHome = () => {
+    if (isStreaming) return;
+
+    setMessages([]);
+    setSelectedBlocks(undefined);
+    setThreadId(null);
+    setIsStreaming(false);
+    setChatStarted(false);
+    setArtifact(undefined);
+    setTextRendererKey((key) => key + 1);
     handleCleanupState();
   };
 
