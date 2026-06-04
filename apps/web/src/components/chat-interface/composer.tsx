@@ -3,7 +3,6 @@
 import {
   ComposerPrimitive,
   ThreadPrimitive,
-  useComposerRuntime,
 } from "@assistant-ui/react";
 import { type FC, useState, useEffect } from "react";
 
@@ -20,9 +19,6 @@ const GENERIC_PLACEHOLDERS = [
 const SEARCH_PLACEHOLDERS = [
   "Tell me what user study or experiment you would like to conduct with AI explanations.",
 ];
-
-const STARTER_DRAFT_MESSAGE =
-  "I would like to compare ... and ... explanations, for example (decision tree) and (SHAP).";
 
 const getRandomPlaceholder = (searchEnabled: boolean) => {
   return searchEnabled
@@ -54,18 +50,6 @@ interface ComposerProps {
   searchEnabled: boolean;
 }
 
-function StarterDraftMessage(props: { enabled: boolean }) {
-  const composerRuntime = useComposerRuntime();
-
-  useEffect(() => {
-    if (props.enabled) {
-      composerRuntime.setText(STARTER_DRAFT_MESSAGE);
-    }
-  }, [composerRuntime, props.enabled]);
-
-  return null;
-}
-
 export const Composer: FC<ComposerProps> = (props: ComposerProps) => {
   const [placeholder, setPlaceholder] = useState("");
 
@@ -76,7 +60,6 @@ export const Composer: FC<ComposerProps> = (props: ComposerProps) => {
   return (
     <DragAndDropWrapper>
       <ComposerPrimitive.Root className="focus-within:border-aui-ring/20 flex flex-col w-full min-h-[64px] flex-wrap items-center justify-center border px-2.5 shadow-sm transition-colors ease-in bg-white rounded-2xl">
-        <StarterDraftMessage enabled={!props.chatStarted} />
         <div className="flex flex-wrap gap-2 items-start mr-auto">
           <ComposerAttachments />
         </div>

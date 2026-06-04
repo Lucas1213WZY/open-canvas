@@ -7,6 +7,9 @@ import { NotebookPen } from "lucide-react";
 import { ProgrammingLanguagesDropdown } from "../ui/programming-lang-dropdown";
 import { Button } from "../ui/button";
 
+const STARTER_DRAFT_MESSAGE =
+  "I would like to compare ... and ... explanations, for example (decision tree) and (SHAP).";
+
 const QUICK_START_PROMPTS_SEARCH = [
   "Plan a user study comparing example-based and counterfactual AI explanations",
   "Design an experiment on whether feature-importance explanations improve trust calibration",
@@ -138,14 +141,26 @@ export const ThreadWelcome: FC<ThreadWelcomeProps> = (
     <ThreadPrimitive.Empty>
       <div className="flex items-center justify-center mt-16 w-full">
         <div className="text-center max-w-3xl w-full">
-          <Avatar className="mx-auto bg-white">
-            <AvatarImage src="/xai.png" alt="XAIkit icon" />
-            <AvatarFallback>XAI</AvatarFallback>
+          <Avatar className="mx-auto h-24 w-24 rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+            <AvatarImage
+              src="/xai.png"
+              alt="XAIkit icon"
+              className="object-contain p-1"
+            />
+            <AvatarFallback className="rounded-3xl">XAI</AvatarFallback>
           </Avatar>
+          <div className="mx-auto mt-6 flex max-w-xl items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left shadow-sm">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+              AI
+            </div>
+            <p className="text-sm leading-6 text-slate-700">
+              {STARTER_DRAFT_MESSAGE}
+            </p>
+          </div>
           <TighterText className="mt-4 text-lg font-medium">
             What XAI user study or experiment would you like to plan?
           </TighterText>
-          <div className="mt-6 mx-auto max-w-xl rounded-2xl border bg-white px-5 py-4 text-left text-sm leading-6 text-gray-600 shadow-sm">
+          <div className="mt-4 mx-auto max-w-xl rounded-2xl border bg-white px-5 py-4 text-left text-sm leading-6 text-gray-600 shadow-sm">
             Tell me what user study or experiment you would like to conduct
             with AI explanations.
           </div>
