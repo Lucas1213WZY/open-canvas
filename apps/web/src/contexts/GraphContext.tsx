@@ -64,7 +64,7 @@ import { StreamWorkerService } from "@/workers/graph-stream/streamWorker";
 import { useQueryState } from "nuqs";
 import { convertToOpenAIFormat } from "@/lib/convert_messages";
 
-const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
+const OPENAI_DIRECT_CHAT = true;
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 
 interface GraphData {
@@ -152,6 +152,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    if (OPENAI_DIRECT_CHAT) return;
     if (typeof window === "undefined" || !userData.user) return;
 
     // Get or create a new assistant if there isn't one set in state, and we're not
@@ -182,6 +183,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   }, [debouncedAPIUpdate]);
 
   useEffect(() => {
+    if (OPENAI_DIRECT_CHAT) return;
     if (!threadData.threadId) return;
     if (!messages.length || !artifact) return;
     if (updateRenderedArtifactRequired || threadSwitched || isStreaming) return;
@@ -217,6 +219,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (
       typeof window === "undefined" ||
+      OPENAI_DIRECT_CHAT ||
       !userData.user ||
       threadData.createThreadLoading ||
       !threadData.threadId
@@ -247,6 +250,11 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   ) => {
     setArtifactUpdateFailed(false);
     if (isStreaming) return;
+    if (OPENAI_DIRECT_CHAT) {
+      setIsArtifactSaved(true);
+      lastSavedArtifact.current = artifactToUpdate;
+      return;
+    }
 
     try {
       const client = createClient();
@@ -280,12 +288,12 @@ export function GraphProvider({ children }: { children: ReactNode }) {
       setUpdateRenderedArtifactRequired(true);
 
       const assistantMessageId = uuidv4();
-      let assistantContent = "";
+      let artifactMarkdown = "";
       setMessages((prevMessages) => [
         ...prevMessages,
         new AIMessage({
           id: assistantMessageId,
-          content: "",
+          content: "Updating the canvas...",
         }),
       ]);
       setArtifact((prev) =>
@@ -355,17 +363,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
           const { value, done } = await reader.read();
           if (done) break;
 
-          assistantContent += decoder.decode(value, { stream: true });
-          setMessages((prevMessages) =>
-            prevMessages.map((message) =>
-              message.id === assistantMessageId
-                ? new AIMessage({
-                    id: assistantMessageId,
-                    content: assistantContent,
-                  })
-                : message
-            )
-          );
+          artifactMarkdown += decoder.decode(value, { stream: true });
           setArtifact((prev) => {
             const baseArtifact =
               prev ??
@@ -388,7 +386,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
                 content.index === 1 && content.type === "text"
                   ? {
                       ...content,
-                      fullMarkdown: assistantContent,
+                      fullMarkdown: artifactMarkdown,
                     }
                   : content
               ),
@@ -396,6 +394,16 @@ export function GraphProvider({ children }: { children: ReactNode }) {
           });
           setUpdateRenderedArtifactRequired(true);
         }
+        setMessages((prevMessages) =>
+          prevMessages.map((message) =>
+            message.id === assistantMessageId
+              ? new AIMessage({
+                  id: assistantMessageId,
+                  content: "I updated the canvas.",
+                })
+              : message
+          )
+        );
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "OpenAI chat request failed";

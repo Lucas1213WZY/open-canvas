@@ -24,7 +24,7 @@ const cleanText = (text: string) => {
 };
 
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
-const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
+const OPENAI_DIRECT_CHAT = true;
 
 function ViewRawText({
   isRawView,

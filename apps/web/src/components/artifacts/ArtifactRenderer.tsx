@@ -23,7 +23,7 @@ import { useAssistantContext } from "@/contexts/AssistantContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
 
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
-const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
+const OPENAI_DIRECT_CHAT = true;
 
 export interface ArtifactRendererProps {
   isEditing: boolean;

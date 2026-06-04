@@ -13,6 +13,24 @@ import { createClient } from "@/hooks/utils";
 import { getCookie, removeCookie } from "@/lib/cookies";
 import { ASSISTANT_ID_COOKIE } from "@/constants";
 
+const OPENAI_DIRECT_CHAT = true;
+const DIRECT_ASSISTANT = {
+  assistant_id: "xaikit-chat-openai",
+  graph_id: "openai-direct",
+  name: "XAIkit Chat",
+  metadata: {
+    is_default: true,
+    iconData: {
+      iconName: "Bot",
+      iconColor: "#000000",
+    },
+    description: "OpenAI-powered Vercel assistant.",
+  },
+  config: {},
+  created_at: new Date(0).toISOString(),
+  updated_at: new Date(0).toISOString(),
+} as unknown as Assistant;
+
 type AssistantContentType = {
   assistants: Assistant[];
   selectedAssistant: Assistant | undefined;
@@ -104,10 +122,20 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   const [isDeletingAssistant, setIsDeletingAssistant] = useState(false);
   const [isCreatingAssistant, setIsCreatingAssistant] = useState(false);
   const [isEditingAssistant, setIsEditingAssistant] = useState(false);
-  const [assistants, setAssistants] = useState<Assistant[]>([]);
-  const [selectedAssistant, setSelectedAssistant] = useState<Assistant>();
+  const [assistants, setAssistants] = useState<Assistant[]>(
+    OPENAI_DIRECT_CHAT ? [DIRECT_ASSISTANT] : []
+  );
+  const [selectedAssistant, setSelectedAssistant] = useState<
+    Assistant | undefined
+  >(OPENAI_DIRECT_CHAT ? DIRECT_ASSISTANT : undefined);
 
   const getAssistants = async (userId: string): Promise<void> => {
+    if (OPENAI_DIRECT_CHAT) {
+      setAssistants([DIRECT_ASSISTANT]);
+      setSelectedAssistant(DIRECT_ASSISTANT);
+      return;
+    }
+
     setIsLoadingAllAssistants(true);
     try {
       const client = createClient();
@@ -132,6 +160,10 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteAssistant = async (assistantId: string): Promise<boolean> => {
+    if (OPENAI_DIRECT_CHAT) {
+      return true;
+    }
+
     setIsDeletingAssistant(true);
     try {
       const client = createClient();
@@ -165,6 +197,13 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
     userId,
     successCallback,
   }: CreateCustomAssistantArgs): Promise<Assistant | undefined> => {
+    if (OPENAI_DIRECT_CHAT) {
+      setAssistants([DIRECT_ASSISTANT]);
+      setSelectedAssistant(DIRECT_ASSISTANT);
+      successCallback?.(DIRECT_ASSISTANT.assistant_id);
+      return DIRECT_ASSISTANT;
+    }
+
     setIsCreatingAssistant(true);
     try {
       const client = createClient();
@@ -208,6 +247,12 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
     assistantId,
     userId,
   }: EditCustomAssistantArgs): Promise<Assistant | undefined> => {
+    if (OPENAI_DIRECT_CHAT) {
+      setAssistants([DIRECT_ASSISTANT]);
+      setSelectedAssistant(DIRECT_ASSISTANT);
+      return DIRECT_ASSISTANT;
+    }
+
     setIsEditingAssistant(true);
     try {
       const client = createClient();
@@ -306,6 +351,12 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   };
 
   const getOrCreateAssistant = async (userId: string) => {
+    if (OPENAI_DIRECT_CHAT) {
+      setAssistants([DIRECT_ASSISTANT]);
+      setSelectedAssistant(DIRECT_ASSISTANT);
+      return;
+    }
+
     if (selectedAssistant) {
       return;
     }

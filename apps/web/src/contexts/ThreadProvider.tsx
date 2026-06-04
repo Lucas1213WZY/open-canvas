@@ -12,6 +12,8 @@ import { useUserContext } from "./UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryState } from "nuqs";
 
+const OPENAI_DIRECT_CHAT = true;
+
 type ThreadContentType = {
   threadId: string | null;
   userThreads: Thread[];
@@ -137,6 +139,11 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   };
 
   const createThread = async (): Promise<Thread | undefined> => {
+    if (OPENAI_DIRECT_CHAT) {
+      setThreadId(null);
+      return undefined;
+    }
+
     if (!user) {
       toast({
         title: "Failed to create thread",
@@ -184,6 +191,11 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   };
 
   const getUserThreads = async () => {
+    if (OPENAI_DIRECT_CHAT) {
+      setUserThreads([]);
+      return;
+    }
+
     if (!user) {
       toast({
         title: "Failed to create thread",
@@ -219,6 +231,13 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteThread = async (id: string, clearMessages: () => void) => {
+    if (OPENAI_DIRECT_CHAT) {
+      setUserThreads([]);
+      setThreadId(null);
+      clearMessages();
+      return;
+    }
+
     setUserThreads((prevThreads) => {
       const newThreads = prevThreads.filter(
         (thread) => thread.thread_id !== id
@@ -241,6 +260,10 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   };
 
   const getThread = async (id: string): Promise<Thread | undefined> => {
+    if (OPENAI_DIRECT_CHAT) {
+      return undefined;
+    }
+
     try {
       const client = createClient();
       return client.threads.get(id);
