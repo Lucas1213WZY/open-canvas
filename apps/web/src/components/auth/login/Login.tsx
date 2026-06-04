@@ -75,7 +75,7 @@ export function Login() {
             alt="LangChain Logo"
             className="rounded-full"
           />
-          Open Canvas
+          Xaikit Test Experiment Planner
         </div>
       </div>
       <div className="lg:p-8">

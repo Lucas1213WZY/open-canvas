@@ -8,33 +8,33 @@ import { ProgrammingLanguagesDropdown } from "../ui/programming-lang-dropdown";
 import { Button } from "../ui/button";
 
 const QUICK_START_PROMPTS_SEARCH = [
-  "Write a market analysis of AI chip manufacturers in 2025",
-  "Create a blog post about the latest climate change policies and their impact",
-  "Draft an investor update on renewable energy trends this quarter",
-  "Write a report on current cybersecurity threats in cloud computing",
-  "Analyze the latest developments in quantum computing for a tech newsletter",
-  "Create a summary of emerging medical breakthroughs in cancer treatment",
-  "Write about the impact of current interest rates on the housing market",
-  "Draft an article about breakthroughs in battery technology this year",
-  "Analyze current supply chain disruptions in semiconductor manufacturing",
-  "Write about how recent AI regulations affect business innovation",
+  "Plan a user study comparing example-based and counterfactual AI explanations",
+  "Design an experiment on whether feature-importance explanations improve trust calibration",
+  "Create a study plan for evaluating AI explanation helpfulness in clinical decision support",
+  "Draft an XAI experiment comparing confidence scores, saliency maps, and natural-language rationales",
+  "Plan a user study on when AI explanations increase overreliance",
+  "Design an experiment to test whether explanations help users detect model errors",
+  "Create a participant procedure for evaluating explanations in loan approval decisions",
+  "Draft variables and measures for an XAI transparency experiment",
+  "Plan a mixed-methods study about user preferences for AI explanations",
+  "Design a task-based study for comparing local and global AI explanations",
 ];
 
 const QUICK_START_PROMPTS = [
-  "Write a bedtime story about a brave little robot",
-  "Create a function to calculate Fibonacci numbers in TypeScript",
-  "Draft a resignation letter for a position I've had for 2 years",
-  "Build a simple weather dashboard using React and Tailwind",
-  "Write a poem about artificial intelligence",
-  "Create a basic Express.js REST API with two endpoints",
-  "Draft a congratulatory speech for my sister's graduation",
-  "Build a command-line calculator in Python",
-  "Write instructions for making perfect scrambled eggs",
-  "Create a simple snake game using HTML canvas",
-  "Write me a TODO app in React",
-  "Explain why the sky is blue in a short essay",
-  "Help me draft an email to my professor Craig",
-  "Write a web scraping program in Python",
+  "Design a user study comparing AI explanations with no-explanation baselines",
+  "Plan an experiment on how explanation detail affects user trust in AI decisions",
+  "Create variables and measures for evaluating AI explanation usefulness",
+  "Draft a procedure for testing whether explanations help users identify AI mistakes",
+  "Plan a between-subjects study on saliency maps versus text rationales",
+  "Design a mixed-methods XAI study with surveys, tasks, and interviews",
+  "Create a participant recruitment plan for an AI explanation experiment",
+  "Draft a dataset and agent setup for training from explanation feedback",
+  "Plan an experiment on AI explanations for loan approval decisions",
+  "Design a study testing whether explanations reduce automation bias",
+  "Compare counterfactual explanations and feature-importance explanations",
+  "Create research questions for an XAI user experiment",
+  "Plan a study about user mental models of AI after seeing explanations",
+  "Draft an XAI experiment for evaluating explanation clarity and actionability",
 ];
 
 function getRandomPrompts(prompts: string[], count: number = 4): string[] {
@@ -100,21 +100,21 @@ const QuickStartButtons = (props: QuickStartButtonsProps) => {
   return (
     <div className="flex flex-col gap-8 items-center justify-center w-full">
       <div className="flex flex-col gap-6">
-        <p className="text-gray-600 text-sm">Start with a blank canvas</p>
+        <p className="text-gray-600 text-sm">Start an experiment plan</p>
         <div className="flex flex-row gap-1 items-center justify-center w-full">
           <Button
             variant="outline"
             className="text-gray-500 hover:text-gray-700 transition-colors ease-in rounded-2xl flex items-center justify-center gap-2 w-[250px] h-[64px]"
             onClick={() => props.handleQuickStart("text")}
           >
-            Untitled document
+            Start planning
             <NotebookPen />
           </Button>
           <ProgrammingLanguagesDropdown handleSubmit={handleLanguageSubmit} />
         </div>
       </div>
       <div className="flex flex-col gap-6 mt-2 w-full">
-        <p className="text-gray-600 text-sm">or with a message</p>
+        <p className="text-gray-600 text-sm">or describe your XAI study</p>
         {props.composer}
         <QuickStartPrompts searchEnabled={props.searchEnabled} />
       </div>
@@ -143,7 +143,7 @@ export const ThreadWelcome: FC<ThreadWelcomeProps> = (
             <AvatarFallback>LC</AvatarFallback>
           </Avatar>
           <TighterText className="mt-4 text-lg font-medium">
-            What would you like to write today?
+            What XAI user study or experiment would you like to plan?
           </TighterText>
           <div className="mt-8 w-full">
             <QuickStartButtons

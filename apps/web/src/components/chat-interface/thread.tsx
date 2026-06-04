@@ -97,7 +97,9 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
           <ThreadHistory
             switchSelectedThreadCallback={switchSelectedThreadCallback}
           />
-          <TighterText className="text-xl">Open Canvas</TighterText>
+          <TighterText className="text-xl">
+            Xaikit Test Experiment Planner
+          </TighterText>
           {!hasChatStarted && (
             <ModelSelector
               modelName={modelName}
