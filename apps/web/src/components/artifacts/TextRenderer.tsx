@@ -24,6 +24,7 @@ const cleanText = (text: string) => {
 };
 
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT === "true";
 
 function ViewRawText({
   isRawView,
@@ -287,7 +288,10 @@ export function TextRendererComponent(props: TextRendererProps) {
             onCompositionEndCapture={() => (isComposition.current = false)}
             onChange={onChange}
             editable={
-              !isStreaming || props.isEditing || !manuallyUpdatingArtifact
+              OPENAI_DIRECT_CHAT ||
+              !isStreaming ||
+              props.isEditing ||
+              !manuallyUpdatingArtifact
             }
             editor={editor}
             className={cn(

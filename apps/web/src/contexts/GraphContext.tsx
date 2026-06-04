@@ -64,7 +64,7 @@ import { StreamWorkerService } from "@/workers/graph-stream/streamWorker";
 import { useQueryState } from "nuqs";
 import { convertToOpenAIFormat } from "@/lib/convert_messages";
 
-const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT === "true";
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 
 interface GraphData {
