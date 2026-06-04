@@ -82,9 +82,9 @@ const QuickStartPrompts = ({ searchEnabled }: QuickStartPromptsProps) => {
             variant="outline"
             className="min-h-[60px] w-full flex items-center justify-center p-6 whitespace-normal text-gray-500 hover:text-gray-700 transition-colors ease-in rounded-2xl"
           >
-            <p className="text-center break-words text-sm font-normal">
+            <span className="text-center break-words text-sm font-normal">
               {prompt}
-            </p>
+            </span>
           </Button>
         ))}
       </div>
@@ -138,13 +138,13 @@ export const ThreadWelcome: FC<ThreadWelcomeProps> = (
     <ThreadPrimitive.Empty>
       <div className="flex items-center justify-center mt-8 w-full">
         <div className="text-center max-w-2xl w-full">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-md border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center">
             <Image
               src="/xai.png"
               alt="XAIkit icon"
-              width={64}
-              height={64}
-              className="h-full w-full object-contain"
+              width={48}
+              height={48}
+              className="h-full w-full object-contain opacity-60"
             />
           </div>
           <div className="mx-auto mt-2 flex max-w-lg items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left shadow-sm">

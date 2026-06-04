@@ -338,19 +338,6 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
     handleCleanupState();
   };
 
-  const goHome = () => {
-    if (isStreaming) return;
-
-    setMessages([]);
-    setSelectedBlocks(undefined);
-    setThreadId(null);
-    setIsStreaming(false);
-    setChatStarted(false);
-    setArtifact(undefined);
-    setTextRendererKey((key) => key + 1);
-    handleCleanupState();
-  };
-
   const updateArtifactTitle = (title: string) => {
     setArtifact((prev) => {
       if (!prev) return prev;
@@ -382,7 +369,6 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
         artifactUpdateFailed={artifactUpdateFailed}
         chatCollapsed={props.chatCollapsed}
         setChatCollapsed={props.setChatCollapsed}
-        goHome={goHome}
         resetToEmptyCanvas={resetToEmptyCanvas}
         isStreaming={isStreaming}
         onTitleChange={updateArtifactTitle}

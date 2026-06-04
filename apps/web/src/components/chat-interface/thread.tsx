@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ProgrammingLanguageOptions } from "@opencanvas/shared/types";
 import { ThreadPrimitive } from "@assistant-ui/react";
 import { Thread as ThreadType } from "@langchain/langgraph-sdk";
-import { ArrowDownIcon, PanelRightOpen, SquarePen } from "lucide-react";
+import { ArrowDownIcon, House, PanelRightOpen, SquarePen } from "lucide-react";
 import { Dispatch, FC, SetStateAction } from "react";
 import { ReflectionsDialog } from "../reflections-dialog/ReflectionsDialog";
 import { useLangSmithLinkToolUI } from "../tool-hooks/LangSmithLinkToolUI";
@@ -55,7 +55,17 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
   } = props;
   const { toast } = useToast();
   const {
-    graphData: { clearState, runId, feedbackSubmitted, setFeedbackSubmitted },
+    graphData: {
+      clearState,
+      runId,
+      feedbackSubmitted,
+      setFeedbackSubmitted,
+      setMessages,
+      setSelectedBlocks,
+      setIsStreaming,
+      setArtifact,
+      isStreaming,
+    },
   } = useGraphContext();
   const { selectedAssistant } = useAssistantContext();
   const {
@@ -70,6 +80,16 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
 
   // Render the LangSmith trace link
   useLangSmithLinkToolUI();
+
+  const goHome = () => {
+    if (isStreaming) return;
+    setMessages([]);
+    setSelectedBlocks(undefined);
+    setThreadId(null);
+    setIsStreaming(false);
+    setChatStarted(false);
+    setArtifact(undefined);
+  };
 
   const handleNewSession = async () => {
     if (!user) {
@@ -120,6 +140,16 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
         </div>
         {hasChatStarted ? (
           <div className="flex flex-row flex-1 gap-2 items-center justify-end">
+            <TooltipIconButton
+              tooltip="Home"
+              variant="ghost"
+              className="w-8 h-8"
+              delayDuration={400}
+              disabled={isStreaming}
+              onClick={goHome}
+            >
+              <House className="text-gray-600" />
+            </TooltipIconButton>
             <TooltipIconButton
               tooltip="Collapse Chat"
               variant="ghost"

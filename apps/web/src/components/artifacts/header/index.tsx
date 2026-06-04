@@ -9,7 +9,6 @@ import {
   FileText,
   FileType,
   FileUp,
-  House,
   PanelRightClose,
   RefreshCw,
 } from "lucide-react";
@@ -37,7 +36,6 @@ interface ArtifactHeaderProps {
   chatCollapsed: boolean;
   setChatCollapsed: (c: boolean) => void;
   resetToEmptyCanvas: () => void;
-  goHome: () => void;
   isStreaming: boolean;
   onTitleChange?: (title: string) => void;
 }
@@ -294,16 +292,6 @@ export function ArtifactHeader(props: ArtifactHeaderProps) {
           artifactUpdateFailed={props.artifactUpdateFailed}
           onTitleChange={props.onTitleChange}
         />
-        <TooltipIconButton
-          tooltip="Home"
-          variant="ghost"
-          className="mb-1 w-8 h-8"
-          delayDuration={400}
-          disabled={props.isStreaming}
-          onClick={props.goHome}
-        >
-          <House className="text-gray-600" />
-        </TooltipIconButton>
       </div>
       <div className="flex gap-2 items-end mt-[10px] mr-[6px]">
         <TooltipIconButton
