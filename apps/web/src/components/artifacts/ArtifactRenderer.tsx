@@ -358,7 +358,7 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
 
   return (
     <div className="relative w-full h-full max-h-screen flex flex-col">
-      <div className="sticky top-0 z-10 bg-white shrink-0">
+      <div className="sticky top-0 z-10 bg-white shrink-0 w-full">
         <ArtifactHeader
           isArtifactSaved={isArtifactSaved}
           isBackwardsDisabled={isBackwardsDisabled}

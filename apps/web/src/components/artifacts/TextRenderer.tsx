@@ -135,26 +135,25 @@ export function TextRendererComponent(props: TextRendererProps) {
       return;
     }
 
-    try {
-      const currentIndex = artifact.currentIndex;
-      const currentContent = artifact.contents.find(
-        (c) => c.index === currentIndex && c.type === "text"
-      ) as ArtifactMarkdownV3 | undefined;
-      if (!currentContent) return;
+    const currentContent = artifact.contents.find(
+      (c) => c.index === artifact.currentIndex && c.type === "text"
+    ) as ArtifactMarkdownV3 | undefined;
+    if (!currentContent) return;
 
-      // Blocks are not found in the artifact, so once streaming is done we should update the artifact state with the blocks
-      (async () => {
-        const markdownAsBlocks = await editor.tryParseMarkdownToBlocks(
-          currentContent.fullMarkdown
-        );
+    // Set these synchronously BEFORE the async parse so that onChange is
+    // blocked while replaceBlocks runs (prevents lossy markdown write-back).
+    setManuallyUpdatingArtifact(true);
+    setUpdateRenderedArtifactRequired(false);
+
+    editor
+      .tryParseMarkdownToBlocks(currentContent.fullMarkdown)
+      .then((markdownAsBlocks) => {
         editor.replaceBlocks(editor.document, markdownAsBlocks);
-        setUpdateRenderedArtifactRequired(false);
         setManuallyUpdatingArtifact(false);
-      })();
-    } finally {
-      setManuallyUpdatingArtifact(false);
-      setUpdateRenderedArtifactRequired(false);
-    }
+      })
+      .catch(() => {
+        setManuallyUpdatingArtifact(false);
+      });
   }, [artifact, updateRenderedArtifactRequired]);
 
   useEffect(() => {
