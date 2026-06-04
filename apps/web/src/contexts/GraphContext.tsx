@@ -469,35 +469,53 @@ export function GraphProvider({ children }: { children: ReactNode }) {
         const artifactMarkdown = canvasResponse.artifactMarkdown.trim();
         const artifactTitle =
           canvasResponse.artifactTitle?.trim() || UNTITLED_DOCUMENT_TITLE;
-        setArtifact((prev) => {
-          const baseArtifact =
-            prev ??
-            ({
-              currentIndex: 1,
-              contents: [
-                {
-                  index: 1,
-                  type: "text",
-                  title: UNTITLED_DOCUMENT_TITLE,
-                  fullMarkdown: "",
-                },
-              ],
-            } as ArtifactV3);
 
-          return {
-            ...baseArtifact,
-            currentIndex: 1,
-            contents: baseArtifact.contents.map((content) =>
-              content.index === 1 && content.type === "text"
-                ? {
-                    ...content,
+        // Build next artifact version. If the current slot is still the empty
+        // placeholder (first ever response), fill it in place; otherwise append
+        // a new version so previous/next navigation works.
+        const baseArtifact: ArtifactV3 = artifact ?? {
+          currentIndex: 1,
+          contents: [
+            {
+              index: 1,
+              type: "text",
+              title: UNTITLED_DOCUMENT_TITLE,
+              fullMarkdown: "",
+            },
+          ],
+        };
+        const currentSlot = baseArtifact.contents.find(
+          (c) => c.index === baseArtifact.currentIndex
+        );
+        const isEmptySlot =
+          currentSlot?.type === "text" && currentSlot.fullMarkdown === "";
+        const nextArtifact: ArtifactV3 = isEmptySlot
+          ? {
+              ...baseArtifact,
+              contents: baseArtifact.contents.map((c) =>
+                c.index === baseArtifact.currentIndex && c.type === "text"
+                  ? { ...c, title: artifactTitle, fullMarkdown: artifactMarkdown }
+                  : c
+              ),
+            }
+          : (() => {
+              const newIndex = baseArtifact.contents.length + 1;
+              return {
+                ...baseArtifact,
+                currentIndex: newIndex,
+                contents: [
+                  ...baseArtifact.contents,
+                  {
+                    index: newIndex,
+                    type: "text" as const,
                     title: artifactTitle,
                     fullMarkdown: artifactMarkdown,
-                  }
-                : content
-            ),
-          };
-        });
+                  },
+                ],
+              };
+            })();
+
+        setArtifact(nextArtifact);
         setUpdateRenderedArtifactRequired(true);
         const aiMessageContent = formatCanvasChatMessage(canvasResponse);
         setMessages((prevMessages) =>
@@ -523,17 +541,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
           { type: "human", id: uuidv4(), content: userMsgContent },
           { type: "ai", id: assistantMessageId, content: aiMessageContent },
         ];
-        const savedArtifact: ArtifactV3 = {
-          currentIndex: 1,
-          contents: [
-            {
-              index: 1,
-              type: "text",
-              title: artifactTitle,
-              fullMarkdown: artifactMarkdown,
-            },
-          ],
-        };
+        const savedArtifact: ArtifactV3 = nextArtifact;
         threadData.saveLocalThread({
           thread_id: localThreadId,
           created_at: sessionCreatedAt,
