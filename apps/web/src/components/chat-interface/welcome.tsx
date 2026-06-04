@@ -147,10 +147,7 @@ export const ThreadWelcome: FC<ThreadWelcomeProps> = (
               className="h-full w-full object-contain opacity-60"
             />
           </div>
-          <div className="mx-auto mt-2 flex max-w-lg items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left shadow-sm">
-            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
-              AI
-            </div>
+          <div className="mx-auto mt-2 flex max-w-lg items-start rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left shadow-sm">
             <div className="space-y-1 text-sm leading-5 text-slate-700">
               <TighterText className="text-base font-medium text-slate-900">
                 What XAI user study or experiment would you like to plan?
