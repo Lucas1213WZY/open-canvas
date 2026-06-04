@@ -279,6 +279,19 @@ export function TextRendererComponent(props: TextRendererProps) {
                 opacity: 0.3;
               }
             }
+
+            .custom-blocknote-theme
+              .bn-block-content[data-content-type="heading"][data-level="1"] {
+              font-size: 1.2em;
+            }
+            .custom-blocknote-theme
+              .bn-block-content[data-content-type="heading"][data-level="2"] {
+              font-size: 1.05em;
+            }
+            .custom-blocknote-theme
+              .bn-block-content[data-content-type="heading"][data-level="3"] {
+              font-size: 0.95em;
+            }
           `}</style>
           <BlockNoteView
             theme="light"
