@@ -357,26 +357,28 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
   };
 
   return (
-    <div className="relative w-full h-full max-h-screen overflow-auto">
-      <ArtifactHeader
-        isArtifactSaved={isArtifactSaved}
-        isBackwardsDisabled={isBackwardsDisabled}
-        isForwardDisabled={isForwardDisabled}
-        setSelectedArtifact={setSelectedArtifact}
-        currentArtifactContent={currentArtifactContent}
-        totalArtifactVersions={artifact.contents.length}
-        selectedAssistant={selectedAssistant}
-        artifactUpdateFailed={artifactUpdateFailed}
-        chatCollapsed={props.chatCollapsed}
-        setChatCollapsed={props.setChatCollapsed}
-        resetToEmptyCanvas={resetToEmptyCanvas}
-        isStreaming={isStreaming}
-        onTitleChange={updateArtifactTitle}
-      />
+    <div className="relative w-full h-full max-h-screen flex flex-col">
+      <div className="sticky top-0 z-10 bg-white shrink-0">
+        <ArtifactHeader
+          isArtifactSaved={isArtifactSaved}
+          isBackwardsDisabled={isBackwardsDisabled}
+          isForwardDisabled={isForwardDisabled}
+          setSelectedArtifact={setSelectedArtifact}
+          currentArtifactContent={currentArtifactContent}
+          totalArtifactVersions={artifact.contents.length}
+          selectedAssistant={selectedAssistant}
+          artifactUpdateFailed={artifactUpdateFailed}
+          chatCollapsed={props.chatCollapsed}
+          setChatCollapsed={props.setChatCollapsed}
+          resetToEmptyCanvas={resetToEmptyCanvas}
+          isStreaming={isStreaming}
+          onTitleChange={updateArtifactTitle}
+        />
+      </div>
       <div
         ref={contentRef}
         className={cn(
-          "flex justify-center h-full",
+          "flex justify-center flex-1 overflow-auto",
           currentArtifactContent.type === "code" ? "pt-[10px]" : ""
         )}
       >

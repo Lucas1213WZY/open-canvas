@@ -273,8 +273,8 @@ const saveArtifactToGoogleDocs = async (
 
 export function ArtifactHeader(props: ArtifactHeaderProps) {
   return (
-    <div className="flex flex-row items-center justify-between">
-      <div className="flex flex-row items-center justify-center gap-2">
+    <div className="flex flex-row items-start justify-between w-full">
+      <div className="flex flex-row items-center gap-2 flex-1 min-w-0 overflow-hidden">
         {props.chatCollapsed && (
           <TooltipIconButton
             tooltip="Expand Chat"
@@ -293,7 +293,7 @@ export function ArtifactHeader(props: ArtifactHeaderProps) {
           onTitleChange={props.onTitleChange}
         />
       </div>
-      <div className="flex gap-2 items-end mt-[10px] mr-[6px]">
+      <div className="flex gap-2 items-center mt-[10px] mr-[6px] shrink-0">
         <TooltipIconButton
           tooltip="Start from empty canvas"
           variant="ghost"
