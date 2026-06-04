@@ -67,6 +67,82 @@ import { convertToOpenAIFormat } from "@/lib/convert_messages";
 const OPENAI_DIRECT_CHAT = true;
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 
+const CANVAS_FOLLOW_UPS = [
+  {
+    section: "# 1. Research Questions",
+    question:
+      "What specific research question or hypothesis should this study test first?",
+  },
+  {
+    section: "## 2.1 Dependent Variables",
+    question:
+      "Which outcome should participants or the system measure most carefully?",
+  },
+  {
+    section: "## 2.2 Independent Variables",
+    question:
+      "What explanation feature or AI condition do you want to manipulate?",
+  },
+  {
+    section: "## 2.3a Control Variables",
+    question:
+      "What should stay constant across conditions so the comparison is fair?",
+  },
+  {
+    section: "## 2.3b Random Variables",
+    question:
+      "What factors might vary naturally and should be recorded rather than controlled?",
+  },
+  {
+    section: "# 3. Study Design",
+    question:
+      "Should the study be within-subject, between-subject, or mixed?",
+  },
+  {
+    section: "# 4. Participants",
+    question:
+      "Who are the target participants, and roughly how many do you want to recruit?",
+  },
+  {
+    section: "# 5. Apparatus & Materials",
+    question:
+      "What AI system, explanations, tasks, and questionnaires will participants use?",
+  },
+  {
+    section: "# 6. Procedure",
+    question:
+      "What should happen first in the participant session, and how long should it take?",
+  },
+  {
+    section: "# 7. Dataset & Agent",
+    question:
+      "What data should the agent learn from, and what prediction or decision should it make?",
+  },
+];
+
+function buildCanvasFollowUp(markdown: string) {
+  const normalizedMarkdown = markdown.trim();
+  if (!normalizedMarkdown) {
+    return "I started the canvas. What user study or experiment would you like to design with AI explanations?";
+  }
+
+  const incompleteSection = CANVAS_FOLLOW_UPS.find(({ section }) => {
+    const start = normalizedMarkdown.indexOf(section);
+    if (start === -1) return false;
+
+    const rest = normalizedMarkdown.slice(start + section.length);
+    const nextSection = rest.search(/\n#\s+\d|\n##\s+\d/);
+    const sectionText = nextSection === -1 ? rest : rest.slice(0, nextSection);
+    return sectionText.includes("[specify]");
+  });
+
+  if (incompleteSection) {
+    return `I updated the canvas. Next question: ${incompleteSection.question}`;
+  }
+
+  return "I updated the canvas. Next question: What part should we refine next: research questions, variables, participants, procedure, or dataset and agent setup?";
+}
+
 interface GraphData {
   runId: string | undefined;
   isStreaming: boolean;
@@ -399,7 +475,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
             message.id === assistantMessageId
               ? new AIMessage({
                   id: assistantMessageId,
-                  content: "I updated the canvas.",
+                  content: buildCanvasFollowUp(artifactMarkdown),
                 })
               : message
           )
