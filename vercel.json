@@ -1,6 +1,6 @@
 {
-  "installCommand": "yarn install --frozen-lockfile",
-  "buildCommand": "yarn turbo build --filter=@opencanvas/web",
-  "outputDirectory": "apps/web/.next",
+  "installCommand": "cd ../.. && yarn install --frozen-lockfile",
+  "buildCommand": "cd ../.. && yarn turbo build --filter=@opencanvas/web",
+  "outputDirectory": ".next",
   "framework": "nextjs"
 }
