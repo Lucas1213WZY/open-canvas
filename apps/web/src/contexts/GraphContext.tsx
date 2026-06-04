@@ -67,6 +67,13 @@ import { convertToOpenAIFormat } from "@/lib/convert_messages";
 const OPENAI_DIRECT_CHAT = true;
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 
+type OpenAICanvasResponse = {
+  action: "new_artifact" | "rewrite_artifact" | "ask_clarifying_question";
+  artifactMarkdown: string;
+  chatMessage: string;
+  nextQuestions: string[];
+};
+
 const CANVAS_FOLLOW_UPS = [
   {
     section: "# 1. Research Questions",
@@ -141,6 +148,21 @@ function buildCanvasFollowUp(markdown: string) {
   }
 
   return "I updated the canvas. Next question: What part should we refine next: research questions, variables, participants, procedure, or dataset and agent setup?";
+}
+
+function formatCanvasChatMessage(response: OpenAICanvasResponse) {
+  const questions = response.nextQuestions
+    .map((question) => question.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (!questions.length) {
+    return response.chatMessage.trim() || buildCanvasFollowUp(response.artifactMarkdown);
+  }
+
+  return `${response.chatMessage.trim()}\n\nNext questions:\n${questions
+    .map((question) => `- ${question}`)
+    .join("\n")}`;
 }
 
 interface GraphData {
@@ -364,12 +386,11 @@ export function GraphProvider({ children }: { children: ReactNode }) {
       setUpdateRenderedArtifactRequired(true);
 
       const assistantMessageId = uuidv4();
-      let artifactMarkdown = "";
       setMessages((prevMessages) => [
         ...prevMessages,
         new AIMessage({
           id: assistantMessageId,
-          content: "Updating the canvas...",
+          content: "Thinking through the canvas update...",
         }),
       ]);
       setArtifact((prev) =>
@@ -416,7 +437,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
             ? currentArtifactContent.fullMarkdown
             : undefined;
 
-        const response = await fetch("/api/openai-chat", {
+        const response = await fetch("/api/openai-canvas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -427,55 +448,48 @@ export function GraphProvider({ children }: { children: ReactNode }) {
           }),
         });
 
-        if (!response.ok || !response.body) {
+        if (!response.ok) {
           const error = await response.json().catch(() => undefined);
-          throw new Error(error?.error || "OpenAI chat request failed");
+          throw new Error(error?.error || "OpenAI canvas request failed");
         }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-
-          artifactMarkdown += decoder.decode(value, { stream: true });
-          setArtifact((prev) => {
-            const baseArtifact =
-              prev ??
-              ({
-                currentIndex: 1,
-                contents: [
-                  {
-                    index: 1,
-                    type: "text",
-                    title: UNTITLED_DOCUMENT_TITLE,
-                    fullMarkdown: "",
-                  },
-                ],
-              } as ArtifactV3);
-
-            return {
-              ...baseArtifact,
+        const canvasResponse = (await response.json()) as OpenAICanvasResponse;
+        const artifactMarkdown = canvasResponse.artifactMarkdown.trim();
+        setArtifact((prev) => {
+          const baseArtifact =
+            prev ??
+            ({
               currentIndex: 1,
-              contents: baseArtifact.contents.map((content) =>
-                content.index === 1 && content.type === "text"
-                  ? {
-                      ...content,
-                      fullMarkdown: artifactMarkdown,
-                    }
-                  : content
-              ),
-            };
-          });
-          setUpdateRenderedArtifactRequired(true);
-        }
+              contents: [
+                {
+                  index: 1,
+                  type: "text",
+                  title: UNTITLED_DOCUMENT_TITLE,
+                  fullMarkdown: "",
+                },
+              ],
+            } as ArtifactV3);
+
+          return {
+            ...baseArtifact,
+            currentIndex: 1,
+            contents: baseArtifact.contents.map((content) =>
+              content.index === 1 && content.type === "text"
+                ? {
+                    ...content,
+                    fullMarkdown: artifactMarkdown,
+                  }
+                : content
+            ),
+          };
+        });
+        setUpdateRenderedArtifactRequired(true);
         setMessages((prevMessages) =>
           prevMessages.map((message) =>
             message.id === assistantMessageId
               ? new AIMessage({
                   id: assistantMessageId,
-                  content: buildCanvasFollowUp(artifactMarkdown),
+                  content: formatCanvasChatMessage(canvasResponse),
                 })
               : message
           )
