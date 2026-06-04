@@ -64,7 +64,7 @@ import { StreamWorkerService } from "@/workers/graph-stream/streamWorker";
 import { useQueryState } from "nuqs";
 import { convertToOpenAIFormat } from "@/lib/convert_messages";
 
-const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT === "true";
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 
 interface GraphData {
@@ -323,13 +323,24 @@ export function GraphProvider({ children }: { children: ReactNode }) {
             ),
           ...(params.messages ?? []),
         ];
+        const currentArtifactContent = artifact?.contents.find(
+          (content) => content.index === artifact.currentIndex
+        );
+        const currentArtifactMarkdown =
+          currentArtifactContent &&
+          isArtifactMarkdownContent(currentArtifactContent)
+            ? currentArtifactContent.fullMarkdown
+            : undefined;
 
         const response = await fetch("/api/openai-chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ messages: openAIMessages }),
+          body: JSON.stringify({
+            artifactContent: currentArtifactMarkdown,
+            messages: openAIMessages,
+          }),
         });
 
         if (!response.ok || !response.body) {

@@ -23,6 +23,7 @@ import { useAssistantContext } from "@/contexts/AssistantContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
 
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
 
 export interface ArtifactRendererProps {
   isEditing: boolean;
@@ -408,19 +409,21 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
           />
         )}
       </div>
-      <CustomQuickActions
-        streamMessage={streamMessage}
-        assistantId={selectedAssistant?.assistant_id}
-        user={user}
-        isTextSelected={isSelectionActive || selectedBlocks !== undefined}
-      />
-      {currentArtifactContent.type === "text" ? (
+      {!OPENAI_DIRECT_CHAT && (
+        <CustomQuickActions
+          streamMessage={streamMessage}
+          assistantId={selectedAssistant?.assistant_id}
+          user={user}
+          isTextSelected={isSelectionActive || selectedBlocks !== undefined}
+        />
+      )}
+      {!OPENAI_DIRECT_CHAT && currentArtifactContent.type === "text" ? (
         <ActionsToolbar
           streamMessage={streamMessage}
           isTextSelected={isSelectionActive || selectedBlocks !== undefined}
         />
       ) : null}
-      {currentArtifactContent.type === "code" ? (
+      {!OPENAI_DIRECT_CHAT && currentArtifactContent.type === "code" ? (
         <CodeToolBar
           streamMessage={streamMessage}
           isTextSelected={isSelectionActive || selectedBlocks !== undefined}

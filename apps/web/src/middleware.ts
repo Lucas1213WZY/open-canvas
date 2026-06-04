@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  if (process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT === "true") {
+  if (process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false") {
     return NextResponse.next();
   }
 

@@ -34,7 +34,7 @@ import { useUserContext } from "@/contexts/UserContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
 import { PDFAttachmentAdapter } from "../ui/assistant-ui/attachment-adapters/pdf";
 
-const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT === "true";
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
 
 export interface ContentComposerChatInterfaceProps {
   switchSelectedThreadCallback: (thread: ThreadType) => void;

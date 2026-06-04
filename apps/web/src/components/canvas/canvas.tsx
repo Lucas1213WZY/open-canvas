@@ -30,7 +30,7 @@ import { CHAT_COLLAPSED_QUERY_PARAM } from "@/constants";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const UNTITLED_DOCUMENT_TITLE = "Untitled document";
-const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT === "true";
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
 
 export function CanvasComponent() {
   const { graphData } = useGraphContext();
