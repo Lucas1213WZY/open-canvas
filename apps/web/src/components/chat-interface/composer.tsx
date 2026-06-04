@@ -10,11 +10,11 @@ import { ComposerAttachments } from "../assistant-ui/attachment";
 import { ComposerActionsPopOut } from "./composer-actions-popout";
 
 const GENERIC_PLACEHOLDERS = [
-  "What experiment do you want to conduct?",
+  "Tell me what user study or experiment you would like to conduct with AI explanations.",
 ];
 
 const SEARCH_PLACEHOLDERS = [
-  "What experiment do you want to conduct?",
+  "Tell me what user study or experiment you would like to conduct with AI explanations.",
 ];
 
 const getRandomPlaceholder = (searchEnabled: boolean) => {

@@ -103,7 +103,8 @@ export function OpenAIDirectChat() {
           {messages.length === 0 ? (
             <div className="flex h-full min-h-[50vh] items-center justify-center text-center text-zinc-400">
               <p className="max-w-sm text-sm">
-                Ask a question to start chatting.
+                Tell me what user study or experiment you would like to conduct
+                with AI explanations.
               </p>
             </div>
           ) : (
@@ -146,7 +147,7 @@ export function OpenAIDirectChat() {
             }}
             rows={2}
             className="min-h-[48px] flex-1 resize-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 outline-none transition focus:border-blue-500"
-            placeholder="Type your message..."
+            placeholder="Tell me what user study or experiment you would like to conduct with AI explanations."
           />
           <button
             type="submit"
