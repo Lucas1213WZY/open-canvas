@@ -17,6 +17,7 @@ import { ThreadWelcome } from "./welcome";
 import { useUserContext } from "@/contexts/UserContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
 import { useAssistantContext } from "@/contexts/AssistantContext";
+import Image from "next/image";
 
 const ThreadScrollToBottom: FC = () => {
   return (
@@ -96,6 +97,13 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
         <div className="flex items-center justify-start gap-2 text-gray-600">
           <ThreadHistory
             switchSelectedThreadCallback={switchSelectedThreadCallback}
+          />
+          <Image
+            src="/xai.png"
+            alt="XAIkit icon"
+            width={28}
+            height={28}
+            className="shrink-0"
           />
           <TighterText className="text-xl">
             Xaikit Test Experiment Planner

@@ -14,6 +14,7 @@ type CanvasAction =
 
 type CanvasResponse = {
   action: CanvasAction;
+  artifactTitle: string;
   artifactMarkdown: string;
   chatMessage: string;
   nextQuestions: string[];
@@ -83,12 +84,15 @@ You must behave like Open Canvas: keep the canvas artifact and the chat response
 Return ONLY a valid JSON object with this exact shape:
 {
   "action": "new_artifact" | "rewrite_artifact" | "ask_clarifying_question",
+  "artifactTitle": "a short editable title for the canvas artifact",
   "artifactMarkdown": "the complete markdown artifact for the canvas",
   "chatMessage": "a short conversational response that summarizes the update and asks what to do next",
   "nextQuestions": ["2 to 4 concise questions the user can answer next"]
 }
 
 Artifact rules:
+- artifactTitle must be concise, specific to the study, and 3 to 8 words.
+- If the user explicitly asks to generate, rename, or change the title, update artifactTitle.
 - artifactMarkdown must be the full canvas document, not a summary.
 - artifactMarkdown MUST start with "# What experiment do you want to conduct?"
 - Keep the seven sections in this exact order: Research Questions; Variables; Study Design; Participants; Apparatus & Materials; Procedure; Dataset & Agent.
@@ -106,6 +110,10 @@ Chat rules:
 - chatMessage should mention the section changed or created.
 - chatMessage should ask one useful next-step question.
 - nextQuestions should help the user fill missing or weak parts of the plan.
+- If asking about participant tasks, do NOT ask "What specific tasks will participants perform with the model?"
+- Instead, state that this planner supports two participant task types: forward simulation and counterfactual simulation.
+- Use this concise wording when relevant: "Which supported task should participants perform: forward simulation (predict the model output from an input) or counterfactual simulation (change an input and predict how the model output changes)?"
+- Do not suggest unsupported participant task types unless the user explicitly asks to discuss limitations or future extensions.
 
 Template to reproduce for new artifacts or preserve for rewrites:
 ${STUDY_ARTIFACT_TEMPLATE}`;
@@ -162,6 +170,7 @@ function normalizeCanvasResponse(value: unknown): CanvasResponse | undefined {
 
   const candidate = value as Partial<CanvasResponse>;
   const action = candidate.action;
+  const artifactTitle = candidate.artifactTitle;
   const artifactMarkdown = candidate.artifactMarkdown;
   const chatMessage = candidate.chatMessage;
   const nextQuestions = candidate.nextQuestions;
@@ -170,6 +179,7 @@ function normalizeCanvasResponse(value: unknown): CanvasResponse | undefined {
     !["new_artifact", "rewrite_artifact", "ask_clarifying_question"].includes(
       String(action)
     ) ||
+    typeof artifactTitle !== "string" ||
     typeof artifactMarkdown !== "string" ||
     typeof chatMessage !== "string" ||
     !Array.isArray(nextQuestions)
@@ -179,6 +189,7 @@ function normalizeCanvasResponse(value: unknown): CanvasResponse | undefined {
 
   return {
     action: action as CanvasAction,
+    artifactTitle: artifactTitle.trim() || "Untitled document",
     artifactMarkdown,
     chatMessage,
     nextQuestions: nextQuestions.filter(

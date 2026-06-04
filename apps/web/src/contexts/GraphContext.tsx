@@ -69,6 +69,7 @@ const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 
 type OpenAICanvasResponse = {
   action: "new_artifact" | "rewrite_artifact" | "ask_clarifying_question";
+  artifactTitle: string;
   artifactMarkdown: string;
   chatMessage: string;
   nextQuestions: string[];
@@ -113,7 +114,7 @@ const CANVAS_FOLLOW_UPS = [
   {
     section: "# 5. Apparatus & Materials",
     question:
-      "What AI system, explanations, tasks, and questionnaires will participants use?",
+      "Which supported task should participants perform: forward simulation (predict the model output from an input) or counterfactual simulation (change an input and predict how the model output changes)?",
   },
   {
     section: "# 6. Procedure",
@@ -390,7 +391,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
         ...prevMessages,
         new AIMessage({
           id: assistantMessageId,
-          content: "Thinking through the canvas update...",
+          content: "Crafting your XAI experiment plan...",
         }),
       ]);
       setArtifact((prev) =>
@@ -455,6 +456,8 @@ export function GraphProvider({ children }: { children: ReactNode }) {
 
         const canvasResponse = (await response.json()) as OpenAICanvasResponse;
         const artifactMarkdown = canvasResponse.artifactMarkdown.trim();
+        const artifactTitle =
+          canvasResponse.artifactTitle?.trim() || UNTITLED_DOCUMENT_TITLE;
         setArtifact((prev) => {
           const baseArtifact =
             prev ??
@@ -477,6 +480,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
               content.index === 1 && content.type === "text"
                 ? {
                     ...content,
+                    title: artifactTitle,
                     fullMarkdown: artifactMarkdown,
                   }
                 : content

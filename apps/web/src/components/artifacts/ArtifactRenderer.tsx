@@ -338,6 +338,24 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
     handleCleanupState();
   };
 
+  const updateArtifactTitle = (title: string) => {
+    setArtifact((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        contents: prev.contents.map((content) =>
+          content.index === prev.currentIndex
+            ? {
+                ...content,
+                title,
+              }
+            : content
+        ),
+      };
+    });
+  };
+
   return (
     <div className="relative w-full h-full max-h-screen overflow-auto">
       <ArtifactHeader
@@ -353,6 +371,7 @@ function ArtifactRendererComponent(props: ArtifactRendererProps) {
         setChatCollapsed={props.setChatCollapsed}
         resetToEmptyCanvas={resetToEmptyCanvas}
         isStreaming={isStreaming}
+        onTitleChange={updateArtifactTitle}
       />
       <div
         ref={contentRef}

@@ -8,6 +8,7 @@ import {
   FileJson,
   FileText,
   FileType,
+  FileUp,
   PanelRightClose,
   RefreshCw,
 } from "lucide-react";
@@ -36,9 +37,13 @@ interface ArtifactHeaderProps {
   setChatCollapsed: (c: boolean) => void;
   resetToEmptyCanvas: () => void;
   isStreaming: boolean;
+  onTitleChange?: (title: string) => void;
 }
 
 type ExportFormat = "json" | "markdown" | "word";
+
+const GOOGLE_DOCS_AUTH_SUCCESS = "google-docs-auth-complete";
+const GOOGLE_DOCS_AUTH_ERROR = "google-docs-auth-error";
 
 const getArtifactText = (
   content: ArtifactCodeV3 | ArtifactMarkdownV3
@@ -190,6 +195,82 @@ const exportArtifact = (
   );
 };
 
+const saveArtifactToGoogleDocs = async (
+  content: ArtifactCodeV3 | ArtifactMarkdownV3
+) => {
+  const createGoogleDoc = async () => {
+    const response = await fetch("/api/google-docs/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        html: getWordHtml(content),
+        title: content.title,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => undefined);
+      throw new Error(error?.error || "Failed to create Google Doc");
+    }
+
+    return (await response.json()) as { url?: string };
+  };
+
+  const openCreatedDoc = async () => {
+    const result = await createGoogleDoc();
+    if (result.url) {
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  try {
+    await openCreatedDoc();
+    return;
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes("authorization")) {
+      throw error;
+    }
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const popup = window.open(
+      "/api/google-docs/oauth/start",
+      "google-docs-auth",
+      "popup,width=520,height=680"
+    );
+
+    if (!popup) {
+      reject(new Error("Google sign-in popup was blocked"));
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      window.removeEventListener("message", handleMessage);
+      reject(new Error("Google sign-in timed out"));
+    }, 60_000);
+
+    function handleMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === GOOGLE_DOCS_AUTH_SUCCESS) {
+        window.clearTimeout(timeout);
+        window.removeEventListener("message", handleMessage);
+        resolve();
+      }
+      if (event.data?.type === GOOGLE_DOCS_AUTH_ERROR) {
+        window.clearTimeout(timeout);
+        window.removeEventListener("message", handleMessage);
+        reject(new Error(event.data.error || "Google sign-in failed"));
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+  });
+
+  await openCreatedDoc();
+};
+
 export function ArtifactHeader(props: ArtifactHeaderProps) {
   return (
     <div className="flex flex-row items-center justify-between">
@@ -209,6 +290,7 @@ export function ArtifactHeader(props: ArtifactHeaderProps) {
           title={props.currentArtifactContent.title}
           isArtifactSaved={props.isArtifactSaved}
           artifactUpdateFailed={props.artifactUpdateFailed}
+          onTitleChange={props.onTitleChange}
         />
       </div>
       <div className="flex gap-2 items-end mt-[10px] mr-[6px]">
@@ -257,6 +339,18 @@ export function ArtifactHeader(props: ArtifactHeaderProps) {
             >
               <FileType />
               Word
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                saveArtifactToGoogleDocs(props.currentArtifactContent).catch(
+                  (error) => {
+                    console.error("Failed to save to Google Docs", error);
+                  }
+                )
+              }
+            >
+              <FileUp />
+              Google Docs
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

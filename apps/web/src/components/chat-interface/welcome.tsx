@@ -138,13 +138,17 @@ export const ThreadWelcome: FC<ThreadWelcomeProps> = (
     <ThreadPrimitive.Empty>
       <div className="flex items-center justify-center mt-16 w-full">
         <div className="text-center max-w-3xl w-full">
-          <Avatar className="mx-auto">
-            <AvatarImage src="/lc_logo.jpg" alt="LangChain Logo" />
-            <AvatarFallback>LC</AvatarFallback>
+          <Avatar className="mx-auto bg-white">
+            <AvatarImage src="/xai.png" alt="XAIkit icon" />
+            <AvatarFallback>XAI</AvatarFallback>
           </Avatar>
           <TighterText className="mt-4 text-lg font-medium">
             What XAI user study or experiment would you like to plan?
           </TighterText>
+          <div className="mt-6 mx-auto max-w-xl rounded-2xl border bg-white px-5 py-4 text-left text-sm leading-6 text-gray-600 shadow-sm">
+            Tell me what user study or experiment you would like to conduct
+            with AI explanations.
+          </div>
           <div className="mt-8 w-full">
             <QuickStartButtons
               composer={props.composer}
