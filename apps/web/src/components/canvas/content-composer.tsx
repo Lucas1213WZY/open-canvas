@@ -34,6 +34,8 @@ import { useUserContext } from "@/contexts/UserContext";
 import { useThreadContext } from "@/contexts/ThreadProvider";
 import { PDFAttachmentAdapter } from "../ui/assistant-ui/attachment-adapters/pdf";
 
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
+
 export interface ContentComposerChatInterfaceProps {
   switchSelectedThreadCallback: (thread: ThreadType) => void;
   setChatStarted: React.Dispatch<React.SetStateAction<boolean>>;
@@ -68,7 +70,7 @@ export function ContentComposerChatInterfaceComponent(
     // Explicitly check for false and not ! since this does not provide a default value
     // so we should assume undefined is true.
     if (message.startRun === false) return;
-    if (!userData.user) {
+    if (!OPENAI_DIRECT_CHAT && !userData.user) {
       toast({
         title: "User not found",
         variant: "destructive",
@@ -90,7 +92,7 @@ export function ContentComposerChatInterfaceComponent(
     setIsStreaming(true);
 
     const contentDocuments: ContextDocument[] = [];
-    if (message.attachments) {
+    if (!OPENAI_DIRECT_CHAT && message.attachments && userData.user) {
       const files = message.attachments
         .map((a) => a.file)
         .filter((f): f is File => f != null);
@@ -124,7 +126,9 @@ export function ContentComposerChatInterfaceComponent(
     } finally {
       setIsRunning(false);
       // Re-fetch threads so that the current thread's title is updated.
-      await getUserThreads();
+      if (!OPENAI_DIRECT_CHAT) {
+        await getUserThreads();
+      }
     }
   }
 

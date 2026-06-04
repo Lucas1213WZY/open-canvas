@@ -62,6 +62,10 @@ import { useThreadContext } from "./ThreadProvider";
 import { useAssistantContext } from "./AssistantContext";
 import { StreamWorkerService } from "@/workers/graph-stream/streamWorker";
 import { useQueryState } from "nuqs";
+import { convertToOpenAIFormat } from "@/lib/convert_messages";
+
+const OPENAI_DIRECT_CHAT = process.env.NEXT_PUBLIC_OPENAI_DIRECT_CHAT !== "false";
+const UNTITLED_DOCUMENT_TITLE = "Untitled document";
 
 interface GraphData {
   runId: string | undefined;
@@ -267,6 +271,147 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   const streamMessageV2 = async (params: GraphInput) => {
     setFirstTokenReceived(false);
     setError(false);
+    if (OPENAI_DIRECT_CHAT) {
+      setIsStreaming(true);
+      setRunId(undefined);
+      setFeedbackSubmitted(false);
+      setChatStarted(true);
+      setFirstTokenReceived(true);
+      setUpdateRenderedArtifactRequired(true);
+
+      const assistantMessageId = uuidv4();
+      let assistantContent = "";
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        new AIMessage({
+          id: assistantMessageId,
+          content: "",
+        }),
+      ]);
+      setArtifact((prev) =>
+        prev ?? {
+          currentIndex: 1,
+          contents: [
+            {
+              index: 1,
+              type: "text",
+              title: UNTITLED_DOCUMENT_TITLE,
+              fullMarkdown: "",
+            },
+          ],
+        }
+      );
+
+      try {
+        const openAIMessages = [
+          ...messages
+            .map((message) => {
+              try {
+                return convertToOpenAIFormat(message);
+              } catch {
+                return undefined;
+              }
+            })
+            .filter(
+              (
+                message
+              ): message is { role: "system" | "user" | "assistant"; content: string } =>
+                message !== undefined &&
+                ["system", "user", "assistant"].includes(
+                  (message as { role: string }).role
+                )
+            ),
+          ...(params.messages ?? []),
+        ];
+
+        const response = await fetch("/api/openai-chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ messages: openAIMessages }),
+        });
+
+        if (!response.ok || !response.body) {
+          const error = await response.json().catch(() => undefined);
+          throw new Error(error?.error || "OpenAI chat request failed");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          assistantContent += decoder.decode(value, { stream: true });
+          setMessages((prevMessages) =>
+            prevMessages.map((message) =>
+              message.id === assistantMessageId
+                ? new AIMessage({
+                    id: assistantMessageId,
+                    content: assistantContent,
+                  })
+                : message
+            )
+          );
+          setArtifact((prev) => {
+            const baseArtifact =
+              prev ??
+              ({
+                currentIndex: 1,
+                contents: [
+                  {
+                    index: 1,
+                    type: "text",
+                    title: UNTITLED_DOCUMENT_TITLE,
+                    fullMarkdown: "",
+                  },
+                ],
+              } as ArtifactV3);
+
+            return {
+              ...baseArtifact,
+              currentIndex: 1,
+              contents: baseArtifact.contents.map((content) =>
+                content.index === 1 && content.type === "text"
+                  ? {
+                      ...content,
+                      fullMarkdown: assistantContent,
+                    }
+                  : content
+              ),
+            };
+          });
+          setUpdateRenderedArtifactRequired(true);
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "OpenAI chat request failed";
+        toast({
+          title: "Error generating content",
+          description: message,
+          variant: "destructive",
+          duration: 5000,
+        });
+        setError(true);
+        setMessages((prevMessages) =>
+          prevMessages.map((prevMessage) =>
+            prevMessage.id === assistantMessageId
+              ? new AIMessage({
+                  id: assistantMessageId,
+                  content: message,
+                })
+              : prevMessage
+          )
+        );
+      } finally {
+        setIsStreaming(false);
+        setUpdateRenderedArtifactRequired(true);
+      }
+      return;
+    }
+
     if (!assistantsData.selectedAssistant) {
       toast({
         title: "Error",
