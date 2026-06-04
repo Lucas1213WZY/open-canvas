@@ -155,6 +155,19 @@ a {
   --bn-colors-editor-text: #3f3f3f;
 }
 
+.custom-blocknote-theme [data-content-type="heading"][data-level="1"],
+.custom-blocknote-theme [data-content-type="heading"][data-level="1"] * {
+  font-size: 1.15rem !important;
+}
+.custom-blocknote-theme [data-content-type="heading"][data-level="2"],
+.custom-blocknote-theme [data-content-type="heading"][data-level="2"] * {
+  font-size: 1.05rem !important;
+}
+.custom-blocknote-theme [data-content-type="heading"][data-level="3"],
+.custom-blocknote-theme [data-content-type="heading"][data-level="3"] * {
+  font-size: 0.95rem !important;
+}
+
 .custom-blocknote-theme a {
   color: #2563eb !important; /* Tailwind blue-600 */
   text-decoration: none;
