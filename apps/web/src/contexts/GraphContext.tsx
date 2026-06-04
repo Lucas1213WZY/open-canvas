@@ -379,6 +379,17 @@ export function GraphProvider({ children }: { children: ReactNode }) {
     setFirstTokenReceived(false);
     setError(false);
     if (OPENAI_DIRECT_CHAT) {
+      // Ensure a stable thread ID exists for this conversation session
+      let localThreadId = threadData.threadId;
+      if (!localThreadId) {
+        localThreadId = uuidv4();
+        threadData.setThreadId(localThreadId);
+      }
+      const existingThread = threadData.userThreads.find(
+        (t) => t.thread_id === localThreadId
+      );
+      const sessionCreatedAt = existingThread?.created_at ?? new Date().toISOString();
+
       setIsStreaming(true);
       setRunId(undefined);
       setFeedbackSubmitted(false);
@@ -488,16 +499,54 @@ export function GraphProvider({ children }: { children: ReactNode }) {
           };
         });
         setUpdateRenderedArtifactRequired(true);
+        const aiMessageContent = formatCanvasChatMessage(canvasResponse);
         setMessages((prevMessages) =>
           prevMessages.map((message) =>
             message.id === assistantMessageId
               ? new AIMessage({
                   id: assistantMessageId,
-                  content: formatCanvasChatMessage(canvasResponse),
+                  content: aiMessageContent,
                 })
               : message
           )
         );
+
+        // Persist this conversation to local thread history
+        const userMsgContent =
+          (params.messages ?? []).at(-1)?.content ?? "";
+        const savedMessages = [
+          ...messages.map((m) => ({
+            type: m instanceof AIMessage ? "ai" : "human",
+            id: m.id,
+            content: m.content,
+          })),
+          { type: "human", id: uuidv4(), content: userMsgContent },
+          { type: "ai", id: assistantMessageId, content: aiMessageContent },
+        ];
+        const savedArtifact: ArtifactV3 = {
+          currentIndex: 1,
+          contents: [
+            {
+              index: 1,
+              type: "text",
+              title: artifactTitle,
+              fullMarkdown: artifactMarkdown,
+            },
+          ],
+        };
+        threadData.saveLocalThread({
+          thread_id: localThreadId,
+          created_at: sessionCreatedAt,
+          updated_at: new Date().toISOString(),
+          metadata: {
+            thread_title:
+              artifactTitle !== UNTITLED_DOCUMENT_TITLE
+                ? artifactTitle
+                : undefined,
+          },
+          values: { artifact: savedArtifact, messages: savedMessages },
+          status: "idle",
+        } as unknown as Thread);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "OpenAI chat request failed";
